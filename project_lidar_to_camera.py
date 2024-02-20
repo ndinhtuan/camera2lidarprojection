@@ -4,14 +4,6 @@ from plyfile import PlyData
 import pandas as pd
 import copy
 
-lidar_to_platform_mat = np.array([
-   [ 0.000697,-0.999962,0.008683,0.935490],
-   [ 0.999920,0.000806,0.012599,-0.151705],
-   [ -0.012605,0.008673,0.999883,0.032571],
-   [ 0.000000,0.000000,0.000000,1.000000]
-   ])
-
-cam_to_platform_mat = None
 ALPHA=3.15815
 ZETA=1.5418
 KAPPA=1.5265
