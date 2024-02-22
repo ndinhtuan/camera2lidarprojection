@@ -19,9 +19,9 @@ LIDAR_TO_PLATFORM_TRANS = np.array([
 
 class LidarCameraCalib(object):
 
-    def __init__(self):
+    def __init__(self, calib_method="ipi"):
         
-        self.lidar2cam_type = "ipi" # or "ipi", t_probe is matrix provided from Dominik
+        self.lidar2cam_type = calib_method # or "ipi", t_probe is matrix provided from Dominik
 
     # Convert lidar point cloud (x, y, z) to (x, y, z) in camera coordination system
     # camera_3d = lidar_3d @ transform_matrix_lidar_to_platform @ invert(tranform_matrix_camera_to_platform)
@@ -75,8 +75,9 @@ class LidarCameraCalib(object):
         result = cv2.projectPoints(point3d, rvec, tvec, camera_matrix, distortion_coeff)
         return result
 
-    def draw_point_on_img(self, point2d, h, w, img, depth: np.ndarray):
+    def draw_point_on_img(self, point2d, h, w, img):
 
+        depth = np.linalg.norm(list_point_cam, axis=1)
         depth = (((depth - 2) / 20) * 255).clip(0, 255).astype(np.uint8)
         color = cv2.applyColorMap(depth, cv2.COLORMAP_TURBO)
         color = np.squeeze(color)
@@ -152,20 +153,19 @@ if __name__=="__main__":
     tmp = np.expand_dims(tmp, 1)
     list_point = np.hstack((list_point, tmp))
 
-    lidar_cam_calib = LidarCameraCalib()
+    lidar_cam_calib = LidarCameraCalib("ipi")
 
     cam_to_platform_trans = create_transformation_mat_from_IPIeuler(ALPHA, ZETA, KAPPA, TRANS_VECT)
 
     list_point_cam = lidar_cam_calib.convert_lidarpoint_to_cam_coord(list_point, LIDAR_TO_PLATFORM_TRANS, cam_to_platform_trans)
 
-    list_point_cam = list_point_cam[:,:3]
-    depth = np.linalg.norm(list_point_cam, axis=1)
-
     point2d, _ = lidar_cam_calib.project_3dpoint_to_cam(list_point_cam)
 
     img = cv2.imread(img_path)
     h, w, _ = img.shape
-    img_ = lidar_cam_calib.draw_point_on_img(point2d, h, w, img, depth)
+    img_ = lidar_cam_calib.draw_point_on_img(point2d, h, w, img)
+    ratio = 0.7
+    img_ = cv2.resize(img_, (int(w*ratio), int(h*ratio)))
 
     cv2.imshow("projection", img_)
     cv2.waitKey(0)
